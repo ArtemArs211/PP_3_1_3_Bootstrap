@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel</title>
+</head>
+<body>
+<h1>Admin Panel</h1>
+<p>Logged in as: <span sec:authentication="name"></span></p>
+<p>Roles: <span sec:authentication="principal.authorities"></span></p>
+
+<div sec:authorize="isAuthenticated()">
+  <form th:action="@{/logout}" method="post">
+    <input type="submit" value="Sign Out"/>
+  </form>
+</div>
+
+<h2>Users</h2>
+<table>
+  <tr>
+    <th>ID</th>
+    <th>Username</th>
+    <th>Roles</th>
+  </tr>
+  <tr th:each="user : ${users}">
+    <td th:text="${user.id}"></td>
+    <td th:text="${user.username}"></td>
+    <td>
+      <span th:each="role : ${user.roles}" th:text="${role.name} + ' '"></span>
+    </td>
+  </tr>
+</table>
+</body>
+</html>
