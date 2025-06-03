@@ -3,6 +3,7 @@ package ru.kata.spring.boot_security.demo.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,6 +16,7 @@ import ru.kata.spring.boot_security.demo.model.Role;
 import ru.kata.spring.boot_security.demo.model.User;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
+import javax.validation.Valid;
 import java.security.Principal;
 import java.util.List;
 
@@ -41,7 +43,7 @@ public class AdminController {
         model.addAttribute("currentUserRoles", userService.findByEmail(principal.getName()).getAuthorities());
 
         User currentUser = userService.findByEmail(principal.getName());
-        model.addAttribute("user", currentUser); // Добавьте объект user в модель
+        model.addAttribute("user", currentUser);
         return "users";
     }
 
@@ -61,9 +63,11 @@ public class AdminController {
     }
 
 
-
     @PostMapping("/new")
-    public String addUser(@ModelAttribute("user") User user) {
+    public String addUser(@Valid @ModelAttribute("user") User user, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return "users";
+        }
         userService.saveUser(user);
         return "redirect:/admin";
     }
