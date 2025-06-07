@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <style>
+        form {
+            max-width: 400px;
+            margin: auto;
+            font-family: Arial, sans-serif;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input[type="text"], input[type="email"], input[type="password"], select, input[type="submit"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+
+<body>
+<h1>Add New User</h1>
+<form th:method="POST" th:action="@{/admin/addUser}" th:object="${user}">
+    <input type="hidden" th:field="*{id}">
+
+    <label for="name">Name:</label>
+    <input type="text" th:field="*{name}" id="name" required minlength="2">
+
+    <label for="surname">Surname:</label>
+    <input type="text" th:field="*{surname}" id="surname" required minlength="2">
+
+    <label for="email">Email:</label>
+    <input type="email" th:field="*{email}" id="email" required>
+
+    <label for="username">Username:</label>
+    <input type="text" th:field="*{username}" id="username" required minlength="3">
+
+    <label for="password">Password:</label>
+    <input type="password" th:field="*{password}" id="password" required minlength="6">
+
+    <label>Roles:</label>
+    <div th:each="role : ${roles}">
+        <input type="checkbox" th:value="${role.id}" th:field="*{roles}" />
+        <span th:text="${role.roleName}"></span>
+    </div>
+
+    <input type="submit" value="Add User"/>
+</form>
+
+<form th:action="@{/logout}" method="post">
+    <input type="submit" value="Logout"/>
+</form>
+</body>
+</html>

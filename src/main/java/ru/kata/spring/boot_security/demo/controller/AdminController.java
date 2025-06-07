@@ -1,24 +1,20 @@
 package ru.kata.spring.boot_security.demo.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import ru.kata.spring.boot_security.demo.dao.RoleDao;
-import ru.kata.spring.boot_security.demo.model.Role;
-import ru.kata.spring.boot_security.demo.model.User;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import ru.kata.spring.boot_security.demo.entitys.Role;
+import ru.kata.spring.boot_security.demo.entitys.User;
+import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
-import javax.validation.Valid;
-import java.security.Principal;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 @Controller
@@ -26,80 +22,57 @@ import java.util.List;
 public class AdminController {
 
     private final UserService userService;
-    private final RoleDao roleDao;
+    private final RoleService roleService;
 
-    @Autowired
-    public AdminController(UserService userService, RoleDao roleDao) {
+    public AdminController(UserService userService, RoleService roleService) {
         this.userService = userService;
-        this.roleDao = roleDao;
+        this.roleService = roleService;
     }
 
-
-    @GetMapping
-    public String allUserTable(Model model, Principal principal) {
-        model.addAttribute("users", userService.findAllUsers());
-        model.addAttribute("roles", roleDao.findAll());
-        model.addAttribute("currentUserEmail", principal.getName());
-        model.addAttribute("currentUserRoles", userService.findByEmail(principal.getName()).getAuthorities());
-
-        User currentUser = userService.findByEmail(principal.getName());
-        model.addAttribute("user", currentUser);
-        return "users";
+    @GetMapping("/user-list")
+    public String printUsers(Model model) {
+        List<User> users = userService.findAll();
+        model.addAttribute("users", users);
+        return "admin";
     }
 
-
-
-    @GetMapping("/user")
-    public String showUser(@RequestParam(value = "id") Long id, Model model) {
-        model.addAttribute("user", userService.findUserById(id));
-        return "user";
+    @GetMapping("/addUser")
+    public String addUserPage(Model model) {
+        List<Role> roles = roleService.findAllRoles();
+        roles.forEach(role -> System.out.println("Role: " + role.getRoleName()));
+        model.addAttribute("user", new User());
+        model.addAttribute("roles", roles);
+        return "add-user";
     }
 
-    @GetMapping("/new")
-    public String createUserForm(@ModelAttribute("user") User user) {
-        List<Role> roles = roleDao.findAll();
-        user.setRoles(roles);
-        return "users";
-    }
-
-
-    @PostMapping("/new")
-    public String addUser(@Valid @ModelAttribute("user") User user, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            return "users";
+    @PostMapping("/addUser")
+    public String addUser(@ModelAttribute User user) {
+        Set<Role> userRoles = new HashSet<>();
+        for (Long roleId : user.getRoles().stream().map(Role::getId).toList()) {
+            userRoles.add(roleService.findRoleById(roleId));
         }
-        userService.saveUser(user);
-        return "redirect:/admin";
+        user.setRoles(userRoles);
+        userService.save(user);
+        return "redirect:/admin/user-list";
     }
 
-
-    @GetMapping("/update/{id}")
-    public String createUpdateForm(@PathVariable("id") Long id, Model model) {
-        model.addAttribute("user", userService.findUserById(id));
-        model.addAttribute("roles", roleDao.findAll());
-        return "users";
+    @GetMapping("/edit/{id}")
+    public String editUser(Model model, @PathVariable("id") Long id) {
+        User user = userService.findById(id);
+        model.addAttribute("user", user);
+        model.addAttribute("roles", roleService.findAllRoles());
+        return "admin-edit-user";
     }
-
 
     @PostMapping("/update/{id}")
-    public String updateUser(@PathVariable("id") Long id, @ModelAttribute("user") User user, RedirectAttributes redirectAttributes) {
-        userService.updateUser(id, user);
-        redirectAttributes.addFlashAttribute("success", "User updated successfully!");
-        return "redirect:/admin";
+    public String updateUser(@PathVariable Long id, @ModelAttribute("user") User user) {
+        userService.update(id,user);
+        return "redirect:/admin/user-list";
     }
-
 
     @PostMapping("/delete/{id}")
-    public String deleteUser(@PathVariable("id") Long id, RedirectAttributes redirectAttributes) {
-        userService.deleteUser(id);
-        redirectAttributes.addFlashAttribute("success", "User deleted successfully!");
-        return "redirect:/admin";
-    }
-
-
-    @GetMapping("/users")
-    public String showAllUsers(Model model) {
-        model.addAttribute("users", userService.findAllUsers());
-        return "users";
+    public String deleteUser(@PathVariable Long id) {
+        userService.delete(id);
+        return "redirect:/admin/user-list";
     }
 }

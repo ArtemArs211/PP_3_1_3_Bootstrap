@@ -1,94 +1,111 @@
 package ru.kata.spring.boot_security.demo.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import ru.kata.spring.boot_security.demo.dao.UserDao;
-import ru.kata.spring.boot_security.demo.model.User;
-import org.springframework.transaction.annotation.Transactional;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import ru.kata.spring.boot_security.demo.repository.RoleRepository;
+import ru.kata.spring.boot_security.demo.repository.UserRepository;
+import ru.kata.spring.boot_security.demo.entitys.Role;
+import ru.kata.spring.boot_security.demo.entitys.User;
+
+import javax.transaction.Transactional;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
-@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
-    @PersistenceContext
-    private EntityManager em;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
-
-    private final UserDao userDao;
-
-    @Autowired
-    public UserServiceImpl(UserDao userDao) {
-        this.userDao = userDao;
-
-    }
-
-
-    @Override
-    public User findUserById(Long userId) {
-        Optional<User> userFromDb = userDao.findById(userId);
-        return userFromDb.orElse(new User());
+    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
-    public List<User> findAllUsers() {
-        return userDao.findAll();
+    public List<User> findAll() {
+        return userRepository.findAll();
     }
 
     @Override
+    public User findById(Long id) {
+        return userRepository.findById(id).
+                orElseThrow(() -> new IllegalArgumentException("Invalid user ID: " + id));
+    }
+
     @Transactional
-    public void saveUser(User user) {
-        user.setPassword(new BCryptPasswordEncoder().encode(user.getPassword()));
-        user.setRoles(user.getRoles());
-        userDao.save(user);
-    }
-
-
     @Override
-    @Transactional
-    public boolean updateUser(Long id, User updatedUser) {
-        Optional<User> userFromDb = userDao.findById(id);
-        if (userFromDb.isPresent()) {
-            User existingUser = userFromDb.get();
+    public void save(User user) {
 
-
-            existingUser.setFirstName(updatedUser.getFirstName());
-            existingUser.setLastName(updatedUser.getLastName());
-            existingUser.setEmail(updatedUser.getEmail());
-            existingUser.setAge(updatedUser.getAge());
-
-
-            if (!updatedUser.getPassword().equals(existingUser.getPassword())) {
-                existingUser.setPassword(new BCryptPasswordEncoder().encode(updatedUser.getPassword()));
-            }
-
-
-            existingUser.setRoles(updatedUser.getRoles());
-
-            userDao.save(existingUser);
-            return true;
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
-        return false;
-    }
 
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            Role userRole = roleRepository.findByRoleName("ROLE_USER")
+                    .orElseThrow(() -> new RuntimeException("Роль ROLE_USER не найдена в БД"));
 
-    @Override
-    @Transactional
-    public boolean deleteUser(Long userId) {
-        if (userDao.findById(userId).isPresent()) {
-            userDao.deleteById(userId);
-            return true;
+            user.setRoles(Set.of(userRole));
+        } else {
+            Set<Role> roles = user.getRoles().stream()
+                    .map(role -> roleRepository.findById(role.getId())
+                            .orElseThrow(() -> new RuntimeException("Role not found with ID: " + role.getId())))
+                    .collect(Collectors.toSet());
+            user.setRoles(roles);
         }
-        return false;
+
+        userRepository.save(user);
     }
 
+    @Transactional
+    @Override
+    public void update(Long id, User user) {
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User with id " + id + " not found"));
+
+        existingUser.setName(user.getName());
+        existingUser.setSurname(user.getSurname());
+        existingUser.setEmail(user.getEmail());
+
+        if (!existingUser.getPassword().equals(user.getPassword())) {
+            existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+
+        userRepository.save(existingUser);
+    }
+
+    @Transactional
+    @Override
+    public void delete(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new IllegalArgumentException("User with id " + id + " not found");
+        }
+        userRepository.deleteById(id);
+    }
 
     @Override
-    public User findByEmail(String email) {
-        return userDao.findByEmail(email);
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User " + username + " not found"));
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        System.out.println("Loaded user: " + user.getUsername());
+        System.out.println("Roles: " + user.getRoles());
+
+        return new org.springframework.security.core.userdetails.User(
+                user.getUsername(),
+                user.getPassword(),
+                user.getRoles()
+        );
     }
 }

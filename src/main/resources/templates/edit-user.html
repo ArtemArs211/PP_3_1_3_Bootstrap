@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Editing Data</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #4CAF50;
+    }
+    form {
+      width: 50%;
+      margin: 20px auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    form label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    form input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    form button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    form button:hover {
+      background-color: #45a049;
+    }
+    .button-container {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .button-container a button {
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+      margin: 0 10px;
+    }
+    .button-container a button:hover {
+      background-color: #1976D2;
+    }
+  </style>
+</head>
+<body>
+<h1>Editing Data</h1>
+<form th:action="@{/user/edit}" th:object="${user}" method="post">
+  <input type="hidden" name="_method" value="patch" />
+
+  <input type="hidden" name="id" th:value="${user.id}">
+
+  <label for="name">Name:</label>
+  <input type="text" id="name" th:field="*{name}" required />
+
+  <label for="surname">Surname:</label>
+  <input type="text" id="surname" th:field="*{surname}" required />
+
+  <label for="email">Email:</label>
+  <input type="email" id="email" th:field="*{email}" required />
+
+  <label for="password">Password:</label>
+  <input type="password" id="password" th:field="*{password}" />
+
+  <button type="submit">Save</button>
+</form>
+
+
+<div class="button-container">
+  <a th:href="@{/user}">
+    <button>Back</button>
+  </a>
+  <a th:href="@{/logout}">
+    <button>Logout</button>
+  </a>
+</div>
+</body>
+</html>
