@@ -1,5 +1,6 @@
 package ru.kata.spring.boot_security.demo.service;
 
+import org.hibernate.Hibernate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -9,7 +10,7 @@ import ru.kata.spring.boot_security.demo.repository.UserRepository;
 import ru.kata.spring.boot_security.demo.entitys.Role;
 import ru.kata.spring.boot_security.demo.entitys.User;
 
-import javax.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -38,8 +39,9 @@ public class UserServiceImpl implements UserService {
                 orElseThrow(() -> new IllegalArgumentException("Invalid user ID: " + id));
     }
 
-    @Transactional
+
     @Override
+    @Transactional
     public void save(User user) {
 
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {
@@ -89,23 +91,26 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public User findByUsername(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User " + username + " not found"));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+
+        Hibernate.initialize(user.getRoles());
+
+        return user;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        System.out.println("Loaded user: " + user.getUsername());
-        System.out.println("Roles: " + user.getRoles());
 
-        return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPassword(),
-                user.getRoles()
-        );
+        Hibernate.initialize(user.getRoles());
+
+        return user;
     }
 }

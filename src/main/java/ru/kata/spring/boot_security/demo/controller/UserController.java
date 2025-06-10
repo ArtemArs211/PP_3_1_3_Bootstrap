@@ -32,7 +32,7 @@ public class UserController {
     }
 
     @GetMapping("/edit")
-    public String editUserPage(Model model, @AuthenticationPrincipal org.springframework.security.core.userdetails.User loggedUser) {
+    public String editUserPage(Model model, @AuthenticationPrincipal User loggedUser) {
         User user = userService.findByUsername(loggedUser.getUsername());
         model.addAttribute("user", user);
         return "edit-user";

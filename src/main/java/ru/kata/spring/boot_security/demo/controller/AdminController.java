@@ -12,9 +12,8 @@ import ru.kata.spring.boot_security.demo.entitys.User;
 import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+
 
 
 @Controller
@@ -47,11 +46,6 @@ public class AdminController {
 
     @PostMapping("/addUser")
     public String addUser(@ModelAttribute User user) {
-        Set<Role> userRoles = new HashSet<>();
-        for (Long roleId : user.getRoles().stream().map(Role::getId).toList()) {
-            userRoles.add(roleService.findRoleById(roleId));
-        }
-        user.setRoles(userRoles);
         userService.save(user);
         return "redirect:/admin/user-list";
     }

@@ -12,8 +12,6 @@ import java.util.Set;
 @Component
 public class SuccessUserHandler implements AuthenticationSuccessHandler {
 
-    private static final String ROLE_ADMIN = "ROLE_ADMIN";
-    private static final String ROLE_USER = "ROLE_USER";
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication) throws IOException {
