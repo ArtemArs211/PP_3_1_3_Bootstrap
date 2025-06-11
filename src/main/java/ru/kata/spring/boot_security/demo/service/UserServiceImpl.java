@@ -1,6 +1,6 @@
 package ru.kata.spring.boot_security.demo.service;
 
-import org.hibernate.Hibernate;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,7 +13,7 @@ import ru.kata.spring.boot_security.demo.entitys.User;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
+
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -29,21 +29,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<User> findAll() {
-        return userRepository.findAll();
+        return userRepository.findAllWithRoles();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public User findById(Long id) {
-        return userRepository.findById(id).
-                orElseThrow(() -> new IllegalArgumentException("Invalid user ID: " + id));
+        return userRepository.findByIdWithRoles(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid user ID: " + id));
     }
-
 
     @Override
     @Transactional
     public void save(User user) {
-
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
@@ -51,14 +51,7 @@ public class UserServiceImpl implements UserService {
         if (user.getRoles() == null || user.getRoles().isEmpty()) {
             Role userRole = roleRepository.findByRoleName("ROLE_USER")
                     .orElseThrow(() -> new RuntimeException("Роль ROLE_USER не найдена в БД"));
-
             user.setRoles(Set.of(userRole));
-        } else {
-            Set<Role> roles = user.getRoles().stream()
-                    .map(role -> roleRepository.findById(role.getId())
-                            .orElseThrow(() -> new RuntimeException("Role not found with ID: " + role.getId())))
-                    .collect(Collectors.toSet());
-            user.setRoles(roles);
         }
 
         userRepository.save(user);
@@ -66,16 +59,22 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void update(Long id, User user) {
-        User existingUser = userRepository.findById(id)
+    public void update(Long id, User updatedUser) {
+        User existingUser = userRepository.findByIdWithRoles(id)
                 .orElseThrow(() -> new IllegalArgumentException("User with id " + id + " not found"));
 
-        existingUser.setName(user.getName());
-        existingUser.setSurname(user.getSurname());
-        existingUser.setEmail(user.getEmail());
+        existingUser.setName(updatedUser.getName());
+        existingUser.setSurname(updatedUser.getSurname());
+        existingUser.setEmail(updatedUser.getEmail());
+        existingUser.setUsername(updatedUser.getUsername());
 
-        if (!existingUser.getPassword().equals(user.getPassword())) {
-            existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
+        if (!updatedUser.getPassword().isEmpty() &&
+                !existingUser.getPassword().equals(updatedUser.getPassword())) {
+            existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
+        }
+
+        if (updatedUser.getRoles() != null && !updatedUser.getRoles().isEmpty()) {
+            existingUser.setRoles(updatedUser.getRoles());
         }
 
         userRepository.save(existingUser);
@@ -93,24 +92,13 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public User findByUsername(String username) {
-        User user = userRepository.findByUsername(username)
+        return userRepository.findByUsernameWithRoles(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-
-        Hibernate.initialize(user.getRoles());
-
-        return user;
     }
 
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-
-        Hibernate.initialize(user.getRoles());
-
-        return user;
+        return findByUsername(username);
     }
 }
