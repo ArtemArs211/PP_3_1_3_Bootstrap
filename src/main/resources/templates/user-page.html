@@ -1,94 +1,49 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <title>User Page</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f9;
-      margin: 0;
-      padding: 20px;
-      color: #333;
-    }
-    h1 {
-      text-align: center;
-      color: #4CAF50;
-    }
-    h2 {
-      text-align: center;
-    }
-    table {
-      margin: 20px auto;
-      border-collapse: collapse;
-      width: 50%;
-      background-color: #fff;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    table td {
-      padding: 10px;
-      border: 1px solid #ddd;
-    }
-    table tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-    table tr:hover {
-      background-color: #f1f1f1;
-    }
-    table strong {
-      color: #555;
-    }
-    .button-container {
-      text-align: center;
-      margin-top: 20px;
-    }
-    button {
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      border-radius: 5px;
-      margin: 0 10px;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    a {
-      text-decoration: none;
-    }
-  </style>
+  <title>User information-page</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-<h1>User Page</h1>
-<h2>Welcome, <span th:text="${user.username}"></span>!</h2>
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-12">
+      <h2 class="text-center">User information-page</h2>
+      <h3 class="text-center mt-3">About user</h3>
 
-<table>
-  <tr>
-    <td><strong>First Name:</strong></td>
-    <td th:text="${user.name}"></td>
-  </tr>
-  <tr>
-    <td><strong>Last Name:</strong></td>
-    <td th:text="${user.surname}"></td>
-  </tr>
-  <tr>
-    <td><strong>Email:</strong></td>
-    <td th:text="${user.email}"></td>
-  </tr>
-  <tr>
-    <td><strong>Login:</strong></td>
-    <td th:text="${user.username}"></td>
-  </tr>
-</table>
+      <table class="table table-bordered mt-4" style="max-width: 800px; margin: 0 auto;">
+        <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Age</th>
+          <th>Email</th>
+          <th>Role</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td th:text="${user.id}"></td>
+          <td th:text="${user.name}"></td>
+          <td th:text="${user.surname}"></td>
+          <td th:text="${user.age}"></td>
+          <td th:text="${user.email}"></td>
+          <td>
+            <span th:each="role : ${user.roles}" th:text="${role.getFormattedName()}"></span>
+          </td>
+        </tr>
+        </tbody>
+      </table>
 
-<div class="button-container">
-  <a th:href="@{/user/edit}">
-    <button>Edit</button>
-  </a>
-  <a th:href="@{/login?logout}">
-    <button>Logout</button>
-  </a>
+      <div class="text-center mt-4">
+        <form th:action="@{/logout}" method="post">
+          <button type="submit" class="btn btn-danger">Logout</button>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
