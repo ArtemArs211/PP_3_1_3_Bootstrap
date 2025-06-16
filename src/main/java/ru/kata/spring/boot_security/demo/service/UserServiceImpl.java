@@ -63,22 +63,34 @@ public class UserServiceImpl implements UserService {
         User existingUser = userRepository.findByIdWithRoles(id)
                 .orElseThrow(() -> new IllegalArgumentException("User with id " + id + " not found"));
 
-        existingUser.setName(updatedUser.getName());
-        existingUser.setSurname(updatedUser.getSurname());
-        existingUser.setEmail(updatedUser.getEmail());
-        existingUser.setUsername(updatedUser.getUsername());
-        existingUser.setAge(updatedUser.getAge());
+        if (updatedUser.getName() != null) {
+            existingUser.setName(updatedUser.getName());
+        }
+        if (updatedUser.getSurname() != null) {
+            existingUser.setSurname(updatedUser.getSurname());
+        }
+        if (updatedUser.getEmail() != null) {
+            existingUser.setEmail(updatedUser.getEmail());
+        }
+        if (updatedUser.getUsername() != null) {
+            existingUser.setUsername(updatedUser.getUsername());
+        }
+        if (updatedUser.getAge() != null) {
+            existingUser.setAge(updatedUser.getAge());
+        }
 
         if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()
                 && !passwordEncoder.matches(updatedUser.getPassword(), existingUser.getPassword())) {
             existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
         }
 
-        existingUser.getRoles().clear();
-        for (Role role : updatedUser.getRoles()) {
-            Role persistedRole = roleRepository.findById(role.getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Role not found"));
-            existingUser.getRoles().add(persistedRole);
+        if (updatedUser.getRoles() != null && !updatedUser.getRoles().isEmpty()) {
+            existingUser.getRoles().clear();
+            for (Role role : updatedUser.getRoles()) {
+                Role persistedRole = roleRepository.findById(role.getId())
+                        .orElseThrow(() -> new IllegalArgumentException("Role not found"));
+                existingUser.getRoles().add(persistedRole);
+            }
         }
 
         userRepository.save(existingUser);
