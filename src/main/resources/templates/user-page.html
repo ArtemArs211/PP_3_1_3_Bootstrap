@@ -29,9 +29,7 @@
           <td th:text="${user.surname}"></td>
           <td th:text="${user.age}"></td>
           <td th:text="${user.email}"></td>
-          <td>
-            <span th:each="role : ${user.roles}" th:text="${role.getFormattedName()}"></span>
-          </td>
+          <td th:text="${user.roles[0].getFormattedName()}"></td>
         </tr>
         </tbody>
       </table>

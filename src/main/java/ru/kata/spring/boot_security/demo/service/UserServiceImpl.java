@@ -67,14 +67,18 @@ public class UserServiceImpl implements UserService {
         existingUser.setSurname(updatedUser.getSurname());
         existingUser.setEmail(updatedUser.getEmail());
         existingUser.setUsername(updatedUser.getUsername());
+        existingUser.setAge(updatedUser.getAge());
 
-        if (!updatedUser.getPassword().isEmpty() &&
-                !existingUser.getPassword().equals(updatedUser.getPassword())) {
+        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()
+                && !passwordEncoder.matches(updatedUser.getPassword(), existingUser.getPassword())) {
             existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
         }
 
-        if (updatedUser.getRoles() != null && !updatedUser.getRoles().isEmpty()) {
-            existingUser.setRoles(updatedUser.getRoles());
+        existingUser.getRoles().clear();
+        for (Role role : updatedUser.getRoles()) {
+            Role persistedRole = roleRepository.findById(role.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Role not found"));
+            existingUser.getRoles().add(persistedRole);
         }
 
         userRepository.save(existingUser);

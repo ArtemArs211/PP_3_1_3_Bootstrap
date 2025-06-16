@@ -14,6 +14,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.UniqueConstraint;
 
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -32,7 +33,7 @@ public class User implements UserDetails {
     private String password;
     private String surname;
     private String email;
-
+    private Integer age; // Добавляем поле age
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -43,15 +44,24 @@ public class User implements UserDetails {
     private Set<Role> roles = new HashSet<>();
 
     public User() {
-
     }
 
-    public User(String name, String surname, String email, String password, String username) {
+    public User(String name, String surname, String email, String password, String username, Integer age) {
         this.name = name;
         this.surname = surname;
         this.email = email;
         this.username = username;
         this.password = password;
+        this.age = age;
+    }
+
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
     }
 
     public Long getId() {
@@ -94,7 +104,6 @@ public class User implements UserDetails {
                 .map(role -> (GrantedAuthority) role)
                 .collect(Collectors.toList());
     }
-
 
     public String getEmail() {
         return email;
