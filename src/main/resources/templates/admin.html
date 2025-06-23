@@ -1,323 +1,68 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Admin Panel</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+  <title>Admin Panel</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
 <div class="container mt-4">
-    <div class="row">
-        <div class="col-12 bg-dark text-white p-3">
-            <span id="userInfo"></span>
-            <form class="d-inline float-end" th:action="@{/logout}" method="post">
-                <button type="submit" class="btn btn-danger">Logout</button>
+  <div class="row">
+    <div class="col-12 bg-dark text-white p-3">
+      <span th:text="${#authentication.principal.username} + ' with roles: ' + ${#authentication.principal.authorities}"></span>
+    </div>
+  </div>
+
+  <div class="row mt-3">
+    <div class="col-12">
+      <h2 class="text-center">Admin panel</h2>
+      <div class="d-flex justify-content-between mb-3">
+        <div>
+          <a href="#" class="btn btn-primary me-2">Users table</a>
+          <a th:href="@{/admin/addUser}" class="btn btn-success">New User</a>
+        </div>
+        <form th:action="@{/logout}" method="post">
+          <button type="submit" class="btn btn-danger">Logout</button>
+        </form>
+      </div>
+
+      <h3 class="mt-4">All users</h3>
+      <table class="table table-striped table-bordered">
+        <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Age</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Edit</th>
+          <th>Delete</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="user : ${users}">
+          <td th:text="${user.id}"></td>
+          <td th:text="${user.name}"></td>
+          <td th:text="${user.surname}"></td>
+          <td th:text="${user.age}"></td>
+          <td th:text="${user.email}"></td>
+          <td>
+            <span th:each="role : ${user.roles}" th:text="${role.getFormattedName()} + ' '"></span>
+          </td>
+          <td>
+            <a th:href="@{/admin/edit/{id}(id=${user.id})}" class="btn btn-warning btn-sm">Edit</a>
+          </td>
+          <td>
+            <form th:action="@{/admin/delete/{id}(id=${user.id})}" method="post">
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
             </form>
-        </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
     </div>
-
-    <div class="row mt-3">
-        <div class="col-12">
-            <h2 class="text-center">Admin Panel</h2>
-            <div class="d-flex justify-content-between mb-3">
-                <div>
-                    <button class="btn btn-primary me-2" id="refreshBtn">
-                        <i class="bi bi-arrow-clockwise"></i> Refresh
-                    </button>
-                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                        <i class="bi bi-plus-circle"></i> New User
-                    </button>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-striped table-bordered" id="usersTable">
-                    <thead class="table-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>First Name</th>
-                        <th>Last Name</th>
-                        <th>Age</th>
-                        <th>Email</th>
-                        <th>Roles</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <!-- Users will be loaded via JavaScript -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
-
-<!-- Add User Modal -->
-<div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add New User</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="addUserForm">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">First Name</label>
-                        <input type="text" class="form-control" name="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Last Name</label>
-                        <input type="text" class="form-control" name="surname" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Age</label>
-                        <input type="number" class="form-control" name="age" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" name="email" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Username</label>
-                        <input type="text" class="form-control" name="username" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Password</label>
-                        <input type="password" class="form-control" name="password" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Roles</label>
-                        <div id="rolesContainer">
-                            <!-- Roles will be loaded via JavaScript -->
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Add User</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Edit User Modal -->
-<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit User</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="editUserForm">
-                <input type="hidden" id="editId" name="id">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">First Name</label>
-                        <input type="text" class="form-control" id="editName" name="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Last Name</label>
-                        <input type="text" class="form-control" id="editSurname" name="surname" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Age</label>
-                        <input type="number" class="form-control" id="editAge" name="age" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" id="editEmail" name="email" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Username</label>
-                        <input type="text" class="form-control" id="editUsername" name="username" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Password (leave blank to keep current)</label>
-                        <input type="password" class="form-control" id="editPassword" name="password">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Roles</label>
-                        <div id="editRolesContainer">
-                            <!-- Roles will be loaded via JavaScript -->
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Load current user info
-        fetch('/api/user/info')
-            .then(response => response.json())
-            .then(user => {
-                const roles = user.roles.map(role => role.formattedName).join(', ');
-                document.getElementById('userInfo').textContent =
-                    `${user.username} with roles: ${roles}`;
-            });
-
-        // Load roles and users
-        Promise.all([
-            fetch('/api/admin/roles').then(res => res.json()),
-            fetch('/api/admin/users').then(res => res.json())
-        ]).then(([roles, users]) => {
-            // Populate roles in add modal
-            const rolesContainer = document.getElementById('rolesContainer');
-            roles.forEach(role => {
-                const div = document.createElement('div');
-                div.className = 'form-check';
-                div.innerHTML = `
-                    <input class="form-check-input" type="checkbox" name="roles" value="${role.id}" id="role-${role.id}">
-                    <label class="form-check-label" for="role-${role.id}">${role.formattedName}</label>
-                `;
-                rolesContainer.appendChild(div);
-            });
-
-            // Populate roles in edit modal
-            const editRolesContainer = document.getElementById('editRolesContainer');
-            roles.forEach(role => {
-                const div = document.createElement('div');
-                div.className = 'form-check';
-                div.innerHTML = `
-                    <input class="form-check-input" type="checkbox" name="editRoles" value="${role.id}" id="edit-role-${role.id}">
-                    <label class="form-check-label" for="edit-role-${role.id}">${role.formattedName}</label>
-                `;
-                editRolesContainer.appendChild(div);
-            });
-
-            // Populate users table
-            const tableBody = document.querySelector('#usersTable tbody');
-            users.forEach(user => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${user.id}</td>
-                    <td>${user.name}</td>
-                    <td>${user.surname}</td>
-                    <td>${user.age}</td>
-                    <td>${user.email}</td>
-                    <td>${user.roles.map(role => role.formattedName).join(', ')}</td>
-                    <td>
-                        <button class="btn btn-warning btn-sm edit-btn" data-id="${user.id}">Edit</button>
-                        <button class="btn btn-danger btn-sm delete-btn" data-id="${user.id}">Delete</button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-
-            // Setup event listeners
-            setupEventListeners();
-        });
-
-        function setupEventListeners() {
-            // Add user form
-            document.getElementById('addUserForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const formData = new FormData(this);
-                const user = {
-                    name: formData.get('name'),
-                    surname: formData.get('surname'),
-                    age: parseInt(formData.get('age')),
-                    email: formData.get('email'),
-                    username: formData.get('username'),
-                    password: formData.get('password'),
-                    roles: Array.from(document.querySelectorAll('#rolesContainer input[name="roles"]:checked'))
-                        .map(checkbox => ({ id: parseInt(checkbox.value) }))
-                };
-
-                fetch('/api/admin/users', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(user)
-                }).then(() => {
-                    location.reload(); // Refresh the page to show new user
-                });
-            });
-
-            // Edit button click
-            document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('edit-btn')) {
-                    const userId = e.target.getAttribute('data-id');
-                    fetch(`/api/admin/users/${userId}`)
-                        .then(response => response.json())
-                        .then(user => {
-                            document.getElementById('editId').value = user.id;
-                            document.getElementById('editName').value = user.name;
-                            document.getElementById('editSurname').value = user.surname;
-                            document.getElementById('editAge').value = user.age;
-                            document.getElementById('editEmail').value = user.email;
-                            document.getElementById('editUsername').value = user.username;
-
-                            // Clear all checkboxes
-                            document.querySelectorAll('#editRolesContainer input[type="checkbox"]').forEach(checkbox => {
-                                checkbox.checked = false;
-                            });
-
-                            // Check user's roles
-                            user.roles.forEach(role => {
-                                const checkbox = document.querySelector(`#editRolesContainer input[value="${role.id}"]`);
-                                if (checkbox) checkbox.checked = true;
-                            });
-
-                            // Show modal
-                            new bootstrap.Modal(document.getElementById('editUserModal')).show();
-                        });
-                }
-            });
-
-            // Edit user form
-            document.getElementById('editUserForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const userId = document.getElementById('editId').value;
-                const formData = new FormData(this);
-                const user = {
-                    name: formData.get('name'),
-                    surname: formData.get('surname'),
-                    age: parseInt(formData.get('age')),
-                    email: formData.get('email'),
-                    username: formData.get('username'),
-                    password: formData.get('password') || null,
-                    roles: Array.from(document.querySelectorAll('#editRolesContainer input[name="editRoles"]:checked'))
-                        .map(checkbox => ({ id: parseInt(checkbox.value) }))
-                };
-
-                fetch(`/api/admin/users/${userId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(user)
-                }).then(() => {
-                    location.reload(); // Refresh the page to show updated user
-                });
-            });
-
-            // Delete button click
-            document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('delete-btn')) {
-                    if (confirm('Are you sure you want to delete this user?')) {
-                        const userId = e.target.getAttribute('data-id');
-                        fetch(`/api/admin/users/${userId}`, {
-                            method: 'DELETE'
-                        }).then(() => {
-                            location.reload(); // Refresh the page to reflect deletion
-                        });
-                    }
-                }
-            });
-
-            // Refresh button
-            document.getElementById('refreshBtn').addEventListener('click', function() {
-                location.reload();
-            });
-        }
-    });
-</script>
 </body>
 </html>

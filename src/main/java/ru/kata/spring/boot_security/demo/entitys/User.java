@@ -27,13 +27,12 @@ public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String name;
     private String username;
     private String password;
     private String surname;
     private String email;
-    private Integer age; // Добавляем поле age
+    private Integer age;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
