@@ -22,7 +22,9 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository,
+                           RoleRepository roleRepository,
+                           PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
@@ -50,57 +52,41 @@ public class UserServiceImpl implements UserService {
 
         if (user.getRoles() == null || user.getRoles().isEmpty()) {
             Role userRole = roleRepository.findByRoleName("ROLE_USER")
-                    .orElseThrow(() -> new RuntimeException("Роль ROLE_USER не найдена в БД"));
+                    .orElseThrow(() -> new RuntimeException("Role ROLE_USER not found"));
             user.setRoles(Set.of(userRole));
         }
 
         userRepository.save(user);
     }
 
-    @Transactional
     @Override
+    @Transactional
     public void update(Long id, User updatedUser) {
         User existingUser = userRepository.findByIdWithRoles(id)
-                .orElseThrow(() -> new IllegalArgumentException("User with id " + id + " not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        if (updatedUser.getName() != null) {
-            existingUser.setName(updatedUser.getName());
-        }
-        if (updatedUser.getSurname() != null) {
-            existingUser.setSurname(updatedUser.getSurname());
-        }
-        if (updatedUser.getEmail() != null) {
-            existingUser.setEmail(updatedUser.getEmail());
-        }
-        if (updatedUser.getUsername() != null) {
-            existingUser.setUsername(updatedUser.getUsername());
-        }
-        if (updatedUser.getAge() != null) {
-            existingUser.setAge(updatedUser.getAge());
-        }
+        existingUser.setName(updatedUser.getName());
+        existingUser.setSurname(updatedUser.getSurname());
+        existingUser.setAge(updatedUser.getAge());
+        existingUser.setEmail(updatedUser.getEmail());
+        existingUser.setUsername(updatedUser.getUsername());
 
-        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()
-                && !passwordEncoder.matches(updatedUser.getPassword(), existingUser.getPassword())) {
+        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
             existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
         }
 
         if (updatedUser.getRoles() != null && !updatedUser.getRoles().isEmpty()) {
-            existingUser.getRoles().clear();
-            for (Role role : updatedUser.getRoles()) {
-                Role persistedRole = roleRepository.findById(role.getId())
-                        .orElseThrow(() -> new IllegalArgumentException("Role not found"));
-                existingUser.getRoles().add(persistedRole);
-            }
+            existingUser.setRoles(updatedUser.getRoles());
         }
 
         userRepository.save(existingUser);
     }
 
-    @Transactional
     @Override
+    @Transactional
     public void delete(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new IllegalArgumentException("User with id " + id + " not found");
+            throw new IllegalArgumentException("User not found");
         }
         userRepository.deleteById(id);
     }

@@ -11,8 +11,10 @@ import ru.kata.spring.boot_security.demo.entitys.User;
 
 import javax.transaction.Transactional;
 
-import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -29,21 +31,30 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
+        Map<String, Role> roles = roleRepository.findAll().stream()
+                .collect(Collectors.toMap(Role::getRoleName, Function.identity()));
 
-        Role roleUser = roleRepository.findByRoleName("ROLE_USER")
-                .orElseGet(() -> roleRepository.save(new Role("ROLE_USER")));
-        Role roleAdmin = roleRepository.findByRoleName("ROLE_ADMIN")
-                .orElseGet(() -> roleRepository.save(new Role("ROLE_ADMIN")));
+        Role roleUser = roles.computeIfAbsent("ROLE_USER", name -> {
+            Role role = new Role(name);
+            return roleRepository.save(role);
+        });
+
+        Role roleAdmin = roles.computeIfAbsent("ROLE_ADMIN", name -> {
+            Role role = new Role(name);
+            return roleRepository.save(role);
+        });
 
         if (userRepository.findByUsername("user").isEmpty()) {
-            User user = new User("User", "User", "user@example.com", passwordEncoder.encode("user"), "user", 30);
-            user.setRoles(new HashSet<>(Set.of(roleUser)));
+            User user = new User("User", "User", "user@example.com",
+                    passwordEncoder.encode("user"), "user", 30);
+            user.setRoles(Set.of(roleUser));
             userRepository.save(user);
         }
 
         if (userRepository.findByUsername("admin").isEmpty()) {
-            User admin = new User("Admin", "Admin", "admin@example.com", passwordEncoder.encode("admin"), "admin", 35);
-            admin.setRoles(new HashSet<>(Set.of(roleAdmin)));
+            User admin = new User("Admin", "Admin", "admin@example.com",
+                    passwordEncoder.encode("admin"), "admin", 35);
+            admin.setRoles(Set.of(roleAdmin, roleUser));
             userRepository.save(admin);
         }
     }
