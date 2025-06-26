@@ -66,21 +66,14 @@ public class UserServiceImpl implements UserService {
         User existingUser = userRepository.findByIdWithRoles(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        existingUser.setName(updatedUser.getName());
-        existingUser.setSurname(updatedUser.getSurname());
-        existingUser.setAge(updatedUser.getAge());
-        existingUser.setEmail(updatedUser.getEmail());
-        existingUser.setUsername(updatedUser.getUsername());
-
-        if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
-            existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
+        String newPassword = updatedUser.getPassword();
+        if (newPassword != null && !newPassword.isEmpty()) {
+            existingUser.setPassword(passwordEncoder.encode(newPassword));
         }
 
-        if (updatedUser.getRoles() != null && !updatedUser.getRoles().isEmpty()) {
-            existingUser.setRoles(updatedUser.getRoles());
+        if (updatedUser.getEmail() != null) {
+                 existingUser.setEmail(updatedUser.getEmail());
         }
-
-        userRepository.save(existingUser);
     }
 
     @Override
